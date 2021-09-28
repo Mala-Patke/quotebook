@@ -7,7 +7,7 @@ router.get('/main', (req, res) => {
 })
 
 router.get('/callback', (req, res) => {
-    if(req.query.email.split("@")[1] !== 'khanlabschool.org') return res.redirect('/error?code=2')
+    if(!req.query.email.endsWith('khanlabschool.org')) return res.redirect('/error?code=2')
     req.session.user = req.query;
     res.redirect('/');
 })

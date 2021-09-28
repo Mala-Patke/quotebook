@@ -24,24 +24,20 @@ module.exports = class DBWrapper {
     static insert = (quote, saidby, submby, timestamp) => {
         db.prepare(`
             INSERT INTO quotebook (quote, saidby, submittedby, timestamp, approved)
-            VALUES ("${quote}", "${saidby}", "${submby}", ${timestamp}, 0)
+            VALUES ('${quote}', '${saidby}', '${submby}', ${timestamp}, 0)
         `).run();
     }
 
     /**
+     * @private
      * @param {object} params 
      * @returns {string}
      */
     static _getQuotes = (key, val) => {
         if(typeof(val) === 'string') val = `'${val}'`;
-
-        let res = {};
-        for(i of this.quoteProps){
-            res[i] = db.prepare(`
-                SELECT ${i} FROM quotebook WHERE ${key} = ${val};
-            `).all();
-        }
-
-        return res;
+        
+        return db.prepare(`
+            SELECT * FROM quotebook WHERE ${key} = ${val};
+        `).all();
     }
 }
