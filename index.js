@@ -8,6 +8,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
+app.use(express.json());
 
 app.use('/auth', require('./routes/auth'));
 app.use('/api', require('./routes/api'));

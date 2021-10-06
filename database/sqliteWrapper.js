@@ -4,7 +4,8 @@
 const db = require('better-sqlite3')('tempdb.sqlite');
 
 module.exports = class DBWrapper {
-    static quoteProps = [
+    static selects = [
+        "rowid",
         "quote", 
         "saidby",
         "submittedby",
@@ -26,26 +27,45 @@ module.exports = class DBWrapper {
     static insert = (quote, saidby, submby, timestamp) => {
         db.prepare(`
             INSERT INTO quotebook (quote, saidby, submittedby, timestamp, approved)
-            VALUES ('${quote}', '${saidby}', '${submby}', ${timestamp}, 0)
+            VALUES ('${quote}', '${saidby}', '${submby}', ${timestamp}, 0);
         `).run();
     }
+    
+    static update = (key, val, compkey, compval) => {
+        if(typeof(val) === "string") val = `'${val}'`;
+        if(typeof(compval) === "string") compval = `'${compval}'` 
 
-    //Reads
+        //No need to use a comparator, shouldn't be updating more than one thing at once
+        db.prepare(`
+            UPDATE quotebook
+            SET ${key} = ${val}
+            WHERE ${compkey} = ${compval}
+        `);
+    }
+
+ 
+
     /**
-     * @private
-     * @param {string} key
-     * @param {string} val 
-     * @returns {string[]}
+     * Object model
+     *    { key, comparator, value }
+     * @param {object[]} params 
+     * @returns {object}
      */
-    static _getQuotes = (key, val, comparator = '=') => {
-        if(typeof(val) === 'string'){
-            if(comparator === 'LIKE') val = `'%${val}%'`
-            else val = `'${val}'`;
-        } 
-        
-        return db.prepare(`
-            SELECT * FROM quotebook WHERE ${key} ${comparator} ${val}`)
-        .all();
+    static testGetQuote = (params) => {
+        let sql = `SELECT ${this.selects.join(", ")} FROM quotebook WHERE`
+        let paramkeys = params.map(e => e.key);
+        console.log(params);
+        paramkeys = paramkeys.filter(e => this.selects.includes(e));
+        for(let { key, comparator, value} of params){
+            sql += ` ${key} ${comparator} ${value} AND`
+        }
+        sql = sql.substr(0, sql.length-4) + ';';
+        console.log(sql);
+        return db.prepare(sql).all();
+    }
+
+    static getQuoteBook = () => {
+        return db.prepare(`SELECT ${this.selects.join(", ")} FROM quotebook`).all();
     }
 
     static getQuotesByID = (id) => {
@@ -71,7 +91,7 @@ module.exports = class DBWrapper {
     //Actually have to put in effort for this one
     static getQuotesbyTimestamp = (lower, upper)=> {
         return db.prepare(`
-            SELECT * FROM quotebook
+            SELECT ${this.selects.join(", ")} FROM quotebook
             WHERE timestamp > ${lower} AND timestamp < ${upper}
         `).all();
     }
