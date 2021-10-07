@@ -3,7 +3,7 @@ const db = require('../database/sqliteWrapper');
 const router = express.Router();
 
 /**
- * Ideas
+ * Basic structure
  * get: api/random
  *  ?num - number
  * 
@@ -41,35 +41,36 @@ router.get('/random', (req, res) => {
 const paramMap = {
     id: {
         key: "rowid",
-        comparator: "=",
+        comparer: "=",
     },
     keyword: {
         key: "quote",
-        comparator: "LIKE",
+        comparer: "LIKE",
         isString: true
     },
     saidby: {
         key: "saidby",
-        comparator: "LIKE",
+        comparer: "LIKE",
         isString: true
     },
     submittedby: {
         key: "submittedby",
-        comparator: "LIKE",
+        comparer: "LIKE",
         isString: true
     },
     before: {
         key: "timestamp",
-        comparator: "<",
+        comparer: "<",
     },
     after: {
         key: "timestamp",
-        comparator: ">",
+        comparer: ">",
     }
 }
 
 router.get('/search', (req, res) => {
-    if(!Object.keys(req.query).length) return res.status(400).send({code: 400, message: "Error: Missing parameters. Search requires at least one parameter to run."});
+    if(!Object.keys(req.query).length)
+        return res.status(400).send({code: 400, message: "Error: Missing parameters. Search requires at least one parameter to run."});
     
     let queryargs = [];
     for(let param of Object.keys(req.query)){
@@ -77,7 +78,7 @@ router.get('/search', (req, res) => {
             if(paramMap[param].isString) req.query[param] = `'%${req.query[param]}%'`;
             queryargs.push({ 
                 key: paramMap[param].key,
-                comparator: paramMap[param].comparator,
+                comparer: paramMap[param].comparer,
                 value: req.query[param]
             });
         } else return res.status(400).send({code: 400, message: "Error: Malformed parameters"});

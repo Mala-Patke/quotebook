@@ -35,7 +35,7 @@ module.exports = class DBWrapper {
         if(typeof(val) === "string") val = `'${val}'`;
         if(typeof(compval) === "string") compval = `'${compval}'` 
 
-        //No need to use a comparator, shouldn't be updating more than one thing at once
+        //No need to use a comparer, shouldn't be updating more than one thing at once
         db.prepare(`
             UPDATE quotebook
             SET ${key} = ${val}
@@ -43,21 +43,19 @@ module.exports = class DBWrapper {
         `);
     }
 
- 
-
+    //Reads
     /**
-     * Object model
-     *    { key, comparator, value }
+     * Object model [ { key, comparer, value } ]
      * @param {object[]} params 
-     * @returns {object}
+     * @returns {object[]}
      */
-    static testGetQuote = (params) => {
+    static getQuote = (params) => {
         let sql = `SELECT ${this.selects.join(", ")} FROM quotebook WHERE`
         let paramkeys = params.map(e => e.key);
         console.log(params);
         paramkeys = paramkeys.filter(e => this.selects.includes(e));
-        for(let { key, comparator, value} of params){
-            sql += ` ${key} ${comparator} ${value} AND`
+        for(let { key, comparer, value} of params){
+            sql += ` ${key} ${comparer} ${value} AND`
         }
         sql = sql.substr(0, sql.length-4) + ';';
         console.log(sql);
@@ -65,35 +63,7 @@ module.exports = class DBWrapper {
     }
 
     static getQuoteBook = () => {
-        return db.prepare(`SELECT ${this.selects.join(", ")} FROM quotebook`).all();
-    }
-
-    static getQuotesByID = (id) => {
-        return this._getQuotes('rowid', id)
-    }
-
-    static getQuotesBySearchTerm = (quote) => {
-        return this._getQuotes('quote', quote, 'LIKE');
-    }
-
-    static getQuotesByAuthor = (author) => {
-        return this._getQuotes('saidby', author, 'LIKE');
-    }
-
-    static getQuotesBySubmitter = (submitter) => {
-        return this._getQuotes('submittedby', submitter, 'LIKE');
-    }
-
-    static getModQueue = () => {
-        return this._getQuotes('approved', 0, '=')
-    }
-
-    //Actually have to put in effort for this one
-    static getQuotesbyTimestamp = (lower, upper)=> {
-        return db.prepare(`
-            SELECT ${this.selects.join(", ")} FROM quotebook
-            WHERE timestamp > ${lower} AND timestamp < ${upper}
-        `).all();
+        return db.prepare(`SELECT ${this.selects.join(", ")} FROM quotebook --WHERE approved = 1`).all();
     }
 }
 
